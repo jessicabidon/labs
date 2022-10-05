@@ -19,12 +19,20 @@
     $(document).ready(function() {
 
       /* Your code goes here */
-      var button = $("#button_change");
-      $(button).click(function() {
-        var inputValue = $("#input_color").val();
-        var element = $(".cow_color");
-        $(element).html(inputValue);
-      });
+      // create a NodeList of text elements that should be updated
+      const color_texts = document.querySelectorAll('.cow_color');
+      const button = document.querySelector('button');
+
+      button.addEventListener('click', setColor);
+
+      /* updates the cow color text to whatever is in the input field */
+      function setColor() {
+        const input = document.querySelector('input').value;
+        // iterate through the NodeList of text elements, and update
+        color_texts.forEach(color_text => {
+          color_text.textContent = input;
+        });
+      }
 
     });
     </script>
