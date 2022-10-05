@@ -27,19 +27,60 @@
     $(document).ready(function() {
 
       /* Step 1: Your code goes here */
+      var canvas = document.getElementById("myCanvas");
+      var ctxt = canvas.getContext('2d');
 
       $("#button_draw_triangle").click(function() {
         /* Your code goes here for Step 2 */
+        // set line width, and fill and stroke colors
+        ctxt.fillStyle = '#f00';
+        ctxt.strokeStyle = '#000';
+        ctxt.lineWidth = 3;
+
+        // draw to each coordinate
+        ctxt.beginPath();
+        ctxt.moveTo(60, 240);
+        ctxt.lineTo(240, 240);
+        ctxt.lineTo(150, 60);
+
+        // close triangle, add fill and stroke colors
+        ctxt.closePath();
+        ctxt.fill();
+        ctxt.stroke();
         
       });
 
       $("#button_draw_rotated_triangle").click(function() {
         /* Your code goes here for Step 3*/
+        // set line width, and fill and stroke colors
+        ctxt.fillStyle = '#f00';
+        ctxt.strokeStyle = '#000';
+        ctxt.lineWidth = 3;
+
+        // move origin (0, 0) to center of canvas
+        ctxt.save() // save original context
+        ctxt.translate(canvas.width / 2, canvas.height / 2);
+        ctxt.rotate(Math.PI / 4);
+
+        // draw onto transformed context
+        ctxt.beginPath();
+        ctxt.moveTo(-90, 90);
+        ctxt.lineTo(90, 90);
+        ctxt.lineTo(0, -90);
+
+        // close triangle, add fill and stroke colors
+        ctxt.closePath();
+        ctxt.fill();
+        ctxt.stroke();
+
+        // reset context to original rotation
+        ctxt.restore();
         
       });
 
       $("#button_clear_canvas").click(function() {
         /* Your code goes here for Step 4 */
+        ctxt.clearRect(0, 0, canvas.width, canvas.height);
 
       });
       
