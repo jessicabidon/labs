@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 11 2:24:48 2022
+Updated on Tues Oct 11 2:26:14 2022
 
 @author: Jessica Bidon
 """
@@ -14,7 +14,6 @@ Updated on Tues Oct 11 2:24:48 2022
         - disable buttons depending on value of last symbol added
             - ex. parentheses only following an operator of priority 3 or lower
             - operators only after operands
-        - disable window resizing (until we add dynamic resizing) 
         - entry box doesn't side scroll as the input exceeds size of frame
         
     Possible Features: 
@@ -274,6 +273,7 @@ class GUI():
         self.create_gui()
         
         # main loop
+        self.root.resizable(False, False)
         self.root.mainloop()
         
     def create_gui(self):
@@ -385,8 +385,6 @@ class GUI():
         self.terminal.insert('end', symbol_as_output)
         self.terminal.config(state='disabled')
             
-    
-
     def operator_command(self, symbol):
         
         # convert to string if it's a number (means it's a result, and that's fine)
