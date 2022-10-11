@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 11 3:12:09 2022
+Updated on Tues Oct 11 4:20:15 2022
 
 @author: Jessica Bidon
 """
@@ -12,12 +12,14 @@ Updated on Tues Oct 11 3:12:09 2022
         - entry box doesn't side scroll as the input exceeds size of frame
         
     Possible Features: 
-        - dynamic resizing
         - icons instead of text for button labels
         - New operators: 
             - square root
             - multiplicative inverse
             - percent
+        - Better design
+            - colors!
+            - rounded buttons
 """
 
 import tkinter as tk
@@ -83,7 +85,9 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)), 
              '(': Operator('(',     4,      False,      '(',            '(',        lambda x: x), # use for infix only
              ')': Operator(')',     4,      False,      ')',            ')',        lambda x: x), # use for infix only
-             '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x)  # use for infix only
+             '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x), # use for infix only
+             'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x), # not yet implemented
+             'q': Operator('q',     5,      True,       'sqrt(',        'sqrt',     lambda x: x)  # not yet implemented
             }
 
 class Evaluate:
@@ -247,28 +251,39 @@ class Evaluate:
         return result
 
 class GUI():
-        
-    BUTTON_WIDTH = 10
-    BUTTON_PADY = 20
 
     def __init__(self):
-                
+            
+        self.font = 'Arial '
+        self.terminal_fontsize = '20'
+        self.button_fontsize = '16'
+        
         self.expression = ''
         self.output_string = ''
+        self.buttons = []
         
         # create frame
         self.root = tk.Tk()
         self.root.title("Calculator")
+        self.root.geometry("400x500")
+        
+        # configure grid for dynamic resizing
+        for i in range(7):
+            tk.Grid.rowconfigure(self.root, i, weight=1)
+        for i in range(5):
+            tk.Grid.columnconfigure(self.root, i, weight=1)
         
         # create terminal entry (disabled for typing)
-        self.terminal = tk.Entry(self.root, width=35, borderwidth=5, font=('Arial 14'), state='disabled')
-        self.terminal.grid(row=0, column=0, columnspan=5)
+        self.terminal = tk.Entry(self.root, borderwidth=5, font=self.font + self.terminal_fontsize, state='disabled')
+        self.terminal.grid(row=0, column=0, columnspan=5, sticky='nesw')
         
         # create the gui
         self.create_gui()
+
+        # bind resize function to window resizing
+        self.root.bind('<Configure>', self.resize_text)
         
         # main loop
-        self.root.resizable(False, False)
         self.root.mainloop()
         
     def create_gui(self):
@@ -282,84 +297,128 @@ class GUI():
         # create utitilty buttons (enter, clear, etc) and add to grid
         self.create_utility_buttons()
         
-    def create_number_buttons(self):
+        # update all button fonts
+        for button in self.buttons:
+            button.config(font = self.font + self.button_fontsize)
         
-        buttons = []
+    def create_number_buttons(self):
         
         # create number buttons
         for i in range(10):
-            buttons.append(tk.Button(self.root, text=str(i), width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda i=i: self.number_command(str(i))))
+            self.buttons.append(tk.Button(self.root, text=str(i), command=lambda i=i: self.number_command(str(i))))
             
         # add number buttons to grid
-        buttons[7].grid(row=3, column=1)
-        buttons[8].grid(row=3, column=2)
-        buttons[9].grid(row=3, column=3)
-        buttons[4].grid(row=4, column=1)
-        buttons[5].grid(row=4, column=2)
-        buttons[6].grid(row=4, column=3)
-        buttons[1].grid(row=5, column=1)
-        buttons[2].grid(row=5, column=2)
-        buttons[3].grid(row=5, column=3)
-        buttons[0].grid(row=6, column=1)
+        self.buttons[7].grid(row=3, column=1, sticky='nesw')
+        self.buttons[8].grid(row=3, column=2, sticky='nesw')
+        self.buttons[9].grid(row=3, column=3, sticky='nesw')
+        self.buttons[4].grid(row=4, column=1, sticky='nesw')
+        self.buttons[5].grid(row=4, column=2, sticky='nesw')
+        self.buttons[6].grid(row=4, column=3, sticky='nesw')
+        self.buttons[1].grid(row=5, column=1, sticky='nesw')
+        self.buttons[2].grid(row=5, column=2, sticky='nesw')
+        self.buttons[3].grid(row=5, column=3, sticky='nesw')
+        self.buttons[0].grid(row=6, column=1, sticky='nesw')
         
     def create_operator_buttons(self):
         
         # decimal "."
-        decimal_button = tk.Button(self.root, text=operators["."].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command("."))
-        decimal_button.grid(row=6, column=2)
+        decimal_button = tk.Button(self.root, text=operators["."].button_str, command=lambda: self.operator_command("."))
+        decimal_button.grid(row=6, column=2, sticky='nesw')
+        self.buttons.append(decimal_button)
+        
         # negation "~"
-        negation_button = tk.Button(self.root, text=operators['~'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('~'))
-        negation_button.grid(row=6, column=3)
+        negation_button = tk.Button(self.root, text=operators['~'].button_str, command=lambda: self.operator_command('~'))
+        negation_button.grid(row=6, column=3, sticky='nesw')
+        self.buttons.append(negation_button)
+        
         # divide "/"
-        divide_button = tk.Button(self.root, text=operators['/'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('/'))
-        divide_button.grid(row=2, column=1)
+        divide_button = tk.Button(self.root, text=operators['/'].button_str, command=lambda: self.operator_command('/'))
+        divide_button.grid(row=2, column=1, sticky='nesw')
+        self.buttons.append(divide_button)
+        
         # multiply "*"
-        multiply_button = tk.Button(self.root, text=operators['*'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('*'))
-        multiply_button.grid(row=2, column=2)
+        multiply_button = tk.Button(self.root, text=operators['*'].button_str, command=lambda: self.operator_command('*'))
+        multiply_button.grid(row=2, column=2, sticky='nesw')
+        self.buttons.append(multiply_button)
+        
         # addition "+"
-        addition_button = tk.Button(self.root, text=operators['+'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('+'))
-        addition_button.grid(row=2, column=3)
+        addition_button = tk.Button(self.root, text=operators['+'].button_str, command=lambda: self.operator_command('+'))
+        addition_button.grid(row=2, column=3, sticky='nesw')
+        self.buttons.append(addition_button)
+        
         # subtraction "-"
-        subtraction_button = tk.Button(self.root, text=operators['-'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('-'))
-        subtraction_button.grid(row=2, column=4)
+        subtraction_button = tk.Button(self.root, text=operators['-'].button_str, command=lambda: self.operator_command('-'))
+        subtraction_button.grid(row=2, column=4, sticky='nesw')
+        self.buttons.append(subtraction_button)
+        
         # natural log "n"
-        natural_log_button = tk.Button(self.root, text=operators['n'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('n'))
-        natural_log_button.grid(row=6, column=0)
+        natural_log_button = tk.Button(self.root, text=operators['n'].button_str, command=lambda: self.operator_command('n'))
+        natural_log_button.grid(row=6, column=0, sticky='nesw')
+        self.buttons.append(natural_log_button)
+        
         # base-10 log "l"
-        log10_button = tk.Button(self.root, text=operators['l'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('l'))
-        log10_button.grid(row=5, column=0)
+        log10_button = tk.Button(self.root, text=operators['l'].button_str, command=lambda: self.operator_command('l'))
+        log10_button.grid(row=5, column=0, sticky='nesw')
+        self.buttons.append(log10_button)
+        
         # sin "s"
-        sin_button = tk.Button(self.root, text=operators['s'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('s'))
-        sin_button.grid(row=4, column=0)
+        sin_button = tk.Button(self.root, text=operators['s'].button_str, command=lambda: self.operator_command('s'))
+        sin_button.grid(row=4, column=0, sticky='nesw')
+        self.buttons.append(sin_button)
+        
         # cos "c"
-        cos_button = tk.Button(self.root, text=operators['c'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('c'))
-        cos_button.grid(row=3, column=0)
+        cos_button = tk.Button(self.root, text=operators['c'].button_str, command=lambda: self.operator_command('c'))
+        cos_button.grid(row=3, column=0, sticky='nesw')
+        self.buttons.append(cos_button)
+        
         # tan "t"
-        tan_button = tk.Button(self.root, text=operators['t'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('t'))
-        tan_button.grid(row=2, column=0)
+        tan_button = tk.Button(self.root, text=operators['t'].button_str, command=lambda: self.operator_command('t'))
+        tan_button.grid(row=2, column=0, sticky='nesw')
+        self.buttons.append(tan_button)
+        
         # exponent "^"
-        exponent_button = tk.Button(self.root, text=operators['^'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('^'))
-        exponent_button.grid(row=1, column=2)
+        exponent_button = tk.Button(self.root, text=operators['^'].button_str, command=lambda: self.operator_command('^'))
+        exponent_button.grid(row=1, column=2, sticky='nesw')
+        self.buttons.append(exponent_button)
+        
         # open parentheses "("
-        open_paren_button = tk.Button(self.root, text=operators['('].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('('))
-        open_paren_button.grid(row=1, column=3)
+        open_paren_button = tk.Button(self.root, text=operators['('].button_str, command=lambda: self.operator_command('('))
+        open_paren_button.grid(row=1, column=3, sticky='nesw')
+        self.buttons.append(open_paren_button)
+        
         # close parentheses ")"
-        close_paren_button = tk.Button(self.root, text=operators[')'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command(')'))
-        close_paren_button.grid(row=1, column=4)
-   
+        close_paren_button = tk.Button(self.root, text=operators[')'].button_str, command=lambda: self.operator_command(')'))
+        close_paren_button.grid(row=1, column=4, sticky='nesw')
+        self.buttons.append(close_paren_button)
+        
+        # square root 'q'
+        square_root_button = tk.Button(self.root, text=operators['q'].button_str, command=None)
+        square_root_button.grid(row=1, column=0, sticky='nesw')
+        square_root_button["state"] = tk.DISABLED
+        self.buttons.append(square_root_button)
+        
+        # multiplicative inverse
+        mult_inverse_button = tk.Button(self.root, text=operators['i'].button_str, command=None)
+        mult_inverse_button.grid(row=1, column=1, sticky='nesw')
+        mult_inverse_button["state"] = tk.DISABLED
+        self.buttons.append(mult_inverse_button)
+        
     def create_utility_buttons(self):
         
         # enter button
-        enter_button = tk.Button(self.root, text='-->', width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.enter_command())
-        enter_button.grid(row=5, column=4, rowspan=2, sticky='ns')
-        
+        enter_button = tk.Button(self.root, text='-->', command=lambda: self.enter_command())
+        enter_button.grid(row=5, column=4, rowspan=2, sticky='nesw')
+        self.buttons.append(enter_button)
+                
         # clear button
-        clear_button = tk.Button(self.root, text='clr', width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.clear_command())
-        clear_button.grid(row=4, column=4)
-        
+        clear_button = tk.Button(self.root, text='clr', command=lambda: self.clear_command())
+        clear_button.grid(row=4, column=4, sticky='nesw')
+        self.buttons.append(clear_button)
+                
         # back button
-        back_button = tk.Button(self.root, text='<--', width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.back_command())
-        back_button.grid(row=3, column=4)
+        back_button = tk.Button(self.root, text='<--', command=lambda: self.back_command())
+        back_button.grid(row=3, column=4, sticky='nesw')
+        self.buttons.append(back_button)
     
     # button commands
     def number_command(self, symbol):
@@ -497,7 +556,22 @@ class GUI():
         self.terminal.insert(0, self.output_string)
         self.terminal.config(state='disabled')
         
-
+    def resize_text(self, window):
+        
+        # size constraint is the smaller of width and height        
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        size = width if width < height else height
+        
+        # resize terminal font size according to width/height
+        self.terminal_fontsize = str(size // 20)
+        self.terminal.config(font = self.font + self.terminal_fontsize)
+        
+        # resize button font size according to width/height
+        self.button_fontsize = str(size // 25)
+        for button in self.buttons:
+            button.config(font= self.font + self.button_fontsize)
+        
 def main():
     
     GUI() 
@@ -508,6 +582,9 @@ def main():
     print(stack.array)
     print(Evaluate.to_string(string))
     print(Evaluate.evaluate(stack))"""
+
+    
+
 
 if __name__ == '__main__':
     main()
