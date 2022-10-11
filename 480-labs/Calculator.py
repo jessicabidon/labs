@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 11 2:26:14 2022
+Updated on Tues Oct 11 3:12:09 2022
 
 @author: Jessica Bidon
 """
@@ -9,11 +9,6 @@ Updated on Tues Oct 11 2:26:14 2022
     Known Bugs: 
         - TypeError multiplying float and string when second operand is negated
           (ex. 3*~9)
-
-    Priority Fixes:
-        - disable buttons depending on value of last symbol added
-            - ex. parentheses only following an operator of priority 3 or lower
-            - operators only after operands
         - entry box doesn't side scroll as the input exceeds size of frame
         
     Possible Features: 
@@ -86,9 +81,9 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
              'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
              'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)), 
-             '.': Operator('.',     4,      True,       '.',            '.',        lambda x: x), # use for infix only
              '(': Operator('(',     4,      False,      '(',            '(',        lambda x: x), # use for infix only
-             ')': Operator(')',     4,      False,      ')',            ')',        lambda x: x) # use for infix only
+             ')': Operator(')',     4,      False,      ')',            ')',        lambda x: x), # use for infix only
+             '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x)  # use for infix only
             }
 
 class Evaluate:
@@ -387,10 +382,50 @@ class GUI():
             
     def operator_command(self, symbol):
         
-        # convert to string if it's a number (means it's a result, and that's fine)
-        self.expression = str(self.expression) + symbol
+        # convert expresion and output to string if digit 
+        # (just means it's a result, which is allowed for operators)
+        self.expression = str(self.expression)
+        self.output_string = str(self.output_string)
+        
+        # handle close parentheses
+        if symbol == ')':
+            # don't allow placement after operators (unless its ')')
+            if self.expression and self.expression[-1] != ')' and self.expression[-1] in operators:
+                return
+            
+            # count open parentheses/trig/log functions
+            open_paren_count = 0
+            for char in self.expression:
+                if char == ')': 
+                    open_paren_count -= 1 # decrement for every closed
+                elif char in operators and operators[char].priority == 4:
+                    open_paren_count += 1 # increment for every open, trig/log
+            
+            # if there are no open parentheses, don't allow placement of )
+            if open_paren_count <= 0:
+                return
+        
+        # if priority 4 operators (parentheses and trig/log) 
+        # follow an operand or '.', add a multiply first
+        # (exclude close parentheses)
+        elif symbol in operators and operators[symbol].priority == 4:
+            if self.expression and (self.expression[-1].isdigit() or self.expression[-1] == '.'):
+                symbol = '*' + symbol
+        
+        # negation operator cannot follow an operand
+        elif symbol == '~':
+            if self.expression and self.expression[-1].isdigit():
+                return
+        
+        # all other operators cannot follow another operator (unless it's ')')
+        elif symbol in operators and operators[symbol].priority < 4:
+            if self.expression and not (self.expression[-1].isdigit() or self.expression[-1] == ')'):
+                return
+                
+        # update expression and output strings
+        self.expression += symbol
         symbol_as_output = Evaluate.to_string(symbol)
-        self.output_string = str(self.output_string) + symbol_as_output
+        self.output_string += symbol_as_output
         
         self.terminal.config(state='normal') 
         self.terminal.insert('end', symbol_as_output)
@@ -462,7 +497,6 @@ class GUI():
         self.terminal.insert(0, self.output_string)
         self.terminal.config(state='disabled')
         
-
 
 def main():
     
