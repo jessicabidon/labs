@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 11 1:17:20 2022
+Updated on Tues Oct 11 2:24:48 2022
 
 @author: Jessica Bidon
 """
 
 """
+    Known Bugs: 
+        - TypeError multiplying float and string when second operand is negated
+          (ex. 3*~9)
+
     Priority Fixes:
-        - create methods for utitilty buttons:
-            - clear
-            - back
         - disable buttons depending on value of last symbol added
             - ex. parentheses only following an operator of priority 3 or lower
             - operators only after operands
@@ -93,6 +94,7 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
 
 class Evaluate:
     
+    # converts a string infix expression to a postfix stack
     @staticmethod
     def convert_to_postfix(infix_expression: str) -> Stack:
         
@@ -255,10 +257,6 @@ class GUI():
     BUTTON_WIDTH = 10
     BUTTON_PADY = 20
 
-    clear_flag = False # what is this for?
-    current_num = 0 # what is this for?
-    math = '' # what is this for?
-
     def __init__(self):
                 
         self.expression = ''
@@ -295,7 +293,7 @@ class GUI():
         
         # create number buttons
         for i in range(10):
-            buttons.append(tk.Button(self.root, text=str(i), width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda i=i: self.button_click(str(i))))
+            buttons.append(tk.Button(self.root, text=str(i), width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda i=i: self.number_command(str(i))))
             
         # add number buttons to grid
         buttons[7].grid(row=3, column=1)
@@ -312,46 +310,46 @@ class GUI():
     def create_operator_buttons(self):
         
         # decimal "."
-        decimal_button = tk.Button(self.root, text=operators["."].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click("."))
+        decimal_button = tk.Button(self.root, text=operators["."].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command("."))
         decimal_button.grid(row=6, column=2)
         # negation "~"
-        negation_button = tk.Button(self.root, text=operators['~'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('~'))
+        negation_button = tk.Button(self.root, text=operators['~'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('~'))
         negation_button.grid(row=6, column=3)
         # divide "/"
-        divide_button = tk.Button(self.root, text=operators['/'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('/'))
+        divide_button = tk.Button(self.root, text=operators['/'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('/'))
         divide_button.grid(row=2, column=1)
         # multiply "*"
-        multiply_button = tk.Button(self.root, text=operators['*'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('*'))
+        multiply_button = tk.Button(self.root, text=operators['*'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('*'))
         multiply_button.grid(row=2, column=2)
         # addition "+"
-        addition_button = tk.Button(self.root, text=operators['+'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('+'))
+        addition_button = tk.Button(self.root, text=operators['+'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('+'))
         addition_button.grid(row=2, column=3)
         # subtraction "-"
-        subtraction_button = tk.Button(self.root, text=operators['-'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('-'))
+        subtraction_button = tk.Button(self.root, text=operators['-'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('-'))
         subtraction_button.grid(row=2, column=4)
         # natural log "n"
-        natural_log_button = tk.Button(self.root, text=operators['n'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('n'))
+        natural_log_button = tk.Button(self.root, text=operators['n'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('n'))
         natural_log_button.grid(row=6, column=0)
         # base-10 log "l"
-        log10_button = tk.Button(self.root, text=operators['l'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('l'))
+        log10_button = tk.Button(self.root, text=operators['l'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('l'))
         log10_button.grid(row=5, column=0)
         # sin "s"
-        sin_button = tk.Button(self.root, text=operators['s'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('s'))
+        sin_button = tk.Button(self.root, text=operators['s'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('s'))
         sin_button.grid(row=4, column=0)
         # cos "c"
-        cos_button = tk.Button(self.root, text=operators['c'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('c'))
+        cos_button = tk.Button(self.root, text=operators['c'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('c'))
         cos_button.grid(row=3, column=0)
         # tan "t"
-        tan_button = tk.Button(self.root, text=operators['t'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('c'))
+        tan_button = tk.Button(self.root, text=operators['t'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('t'))
         tan_button.grid(row=2, column=0)
         # exponent "^"
-        exponent_button = tk.Button(self.root, text=operators['^'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('^'))
+        exponent_button = tk.Button(self.root, text=operators['^'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('^'))
         exponent_button.grid(row=1, column=2)
         # open parentheses "("
-        open_paren_button = tk.Button(self.root, text=operators['('].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click('('))
+        open_paren_button = tk.Button(self.root, text=operators['('].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command('('))
         open_paren_button.grid(row=1, column=3)
         # close parentheses ")"
-        close_paren_button = tk.Button(self.root, text=operators[')'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.button_click(')'))
+        close_paren_button = tk.Button(self.root, text=operators[')'].button_str, width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.operator_command(')'))
         close_paren_button.grid(row=1, column=4)
    
     def create_utility_buttons(self):
@@ -359,13 +357,42 @@ class GUI():
         # enter button
         enter_button = tk.Button(self.root, text='-->', width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.enter_command())
         enter_button.grid(row=5, column=4, rowspan=2, sticky='ns')
+        
+        # clear button
+        clear_button = tk.Button(self.root, text='clr', width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.clear_command())
+        clear_button.grid(row=4, column=4)
+        
+        # back button
+        back_button = tk.Button(self.root, text='<--', width=self.BUTTON_WIDTH, pady=self.BUTTON_PADY, command=lambda: self.back_command())
+        back_button.grid(row=3, column=4)
     
     # button commands
-    def button_click(self, symbol):
+    def number_command(self, symbol):
         
+        # if expression is a number, it's a result, 
+        # and we shouldn't add another digit to it.
+        # instead, clear and replace the result
+        if type(self.expression) == int or type(self.expression) == float:
+            self.clear_command()
+        
+        # update expression and output strings
         self.expression += symbol
         symbol_as_output = Evaluate.to_string(symbol)
         self.output_string += symbol_as_output
+        
+        # update terminal with new symbol
+        self.terminal.config(state='normal')
+        self.terminal.insert('end', symbol_as_output)
+        self.terminal.config(state='disabled')
+            
+    
+
+    def operator_command(self, symbol):
+        
+        # convert to string if it's a number (means it's a result, and that's fine)
+        self.expression = str(self.expression) + symbol
+        symbol_as_output = Evaluate.to_string(symbol)
+        self.output_string = str(self.output_string) + symbol_as_output
         
         self.terminal.config(state='normal') 
         self.terminal.insert('end', symbol_as_output)
@@ -374,13 +401,69 @@ class GUI():
     def enter_command(self):
         
         if self.terminal.get(): # enter only if non-empty
+            # evaluate 
             postfix = Evaluate.convert_to_postfix(self.expression)
             result = Evaluate.evaluate(postfix)
             
+            # update expression and output strings
+            self.expression = result
+            self.output_string = result
+            
+            # update terminal
             self.terminal.config(state='normal')
             self.terminal.delete(0, "end")
-            self.terminal.insert(0, result)
+            self.terminal.insert(0, self.output_string)
             self.terminal.config(state='disabled')
+
+    def clear_command(self):
+        
+        # update expression and output strings
+        self.expression = ''
+        self.output_string = ''
+        
+        # update terminal
+        self.terminal.config(state='normal')
+        self.terminal.delete(0, "end")
+        self.terminal.config(state='disabled')
+        
+    def back_command(self):
+        
+        # if expression is empty, do nothing
+        if not self.expression:
+            return
+        
+        # if expression is an integer or float, 
+        # it's a result, and it should just clear everything
+        if type(self.expression) == int or type(self.expression) == float:
+            self.clear_command()
+            return
+        
+        # get last symbol from expression
+        op_to_remove = self.expression[-1]
+        
+        # get the length of the output string for that symbol
+        # (so we can remove the correct number of characters)
+        if op_to_remove.isdigit():
+            output_length = 1
+        elif op_to_remove not in operators:
+            # TODO: throw error
+            print("how are you going to backspace an invalid operator?")
+        else:
+            output_length = len(operators[op_to_remove].output_str)
+        
+        # negate so we can get last x elements
+        output_indices = output_length * -1
+        
+        # update expression and output strings
+        self.expression = self.expression[:-1]
+        self.output_string = self.output_string[:output_indices]
+        
+        # update terminal with new output string
+        self.terminal.config(state='normal')
+        self.terminal.delete(0, "end")
+        self.terminal.insert(0, self.output_string)
+        self.terminal.config(state='disabled')
+        
 
 
 def main():
