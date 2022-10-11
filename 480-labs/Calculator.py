@@ -93,24 +93,6 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
 
 class Evaluate:
     
-    # operator attributes:   symbol, priority, is_unary, output_string, button_string, and func (function to execute)
-    operators = {'+': Operator('+',     1,      False,      '+',            '+',        lambda x, y: x + y),
-                 '-': Operator('-',     1,      False,      '-',            '-',        lambda x, y: x - y),
-                 '*': Operator('*',     2,      False,      '*',            'x',        lambda x, y: x * y), # TODO: change to unicode multiply
-                 '/': Operator('/',     2,      False,      '/',            '/',        lambda x, y: x / y), # TODO: change to unicode divide
-                 '~': Operator('~',     2,      True,       '-',            '(-)',      lambda x: x * -1),
-                 '^': Operator('^',     3,      False,      '^',            '^',        lambda x, y: x ** y), 
-                 's': Operator('s',     4,      True,       'SIN(',         'SIN',      lambda x: m.sin(x)),
-                 'c': Operator('c',     4,      True,       'COS(',         'COS',      lambda x: m.cos(x)),
-                 't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
-                 'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
-                 'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)), 
-                 '.': Operator('.',     4,      True,       '.',            '.',        lambda x: x), # use for infix only
-                 '(': Operator('(',     4,      False,      '(',            '(',        lambda x: x), # use for infix only
-                 ')': Operator(')',     4,      False,      ')',            ')',        lambda x: x) # use for infix only
-                } 
-    
-    # TODO converts an expression from infix to postfix
     @staticmethod
     def convert_to_postfix(infix_expression: str) -> Stack:
         
