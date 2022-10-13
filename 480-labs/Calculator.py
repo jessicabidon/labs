@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 11 4:20:15 2022
+Updated on Tues Oct 12 10:07:23 2022
 
 @author: Jessica Bidon
 """
 
 """
     Known Bugs: 
-        - TypeError multiplying float and string when second operand is negated
-          (ex. 3*~9)
         - entry box doesn't side scroll as the input exceeds size of frame
         
     Possible Features: 
@@ -62,22 +60,14 @@ class Stack:
     def push(self, element):
         self.top += 1
         self.array.append(element)
-        
-    # modify top element of stack
-    # add element if empty
-    def modify(self, element):
-        if self.isEmpty():
-            self.push(element)
-        else:
-            self.array[-1] = element
 
 # operator attributes:   symbol, priority, is_unary, output_string, button_string, and func (function to execute)
 operators = {'+': Operator('+',     1,      False,      '+',            '+',        lambda x, y: x + y),
              '-': Operator('-',     1,      False,      '-',            '-',        lambda x, y: x - y),
              '*': Operator('*',     2,      False,      '*',            'x',        lambda x, y: x * y), # TODO: change to unicode multiply
              '/': Operator('/',     2,      False,      '/',            '/',        lambda x, y: x / y), # TODO: change to unicode divide
-             '~': Operator('~',     2,      True,       '-',            '(-)',      lambda x: x * -1),
              '^': Operator('^',     3,      False,      '^',            '^',        lambda x, y: x ** y), 
+             '~': Operator('~',     4,      True,       '-',            '(-)',      lambda x: x * -1),
              's': Operator('s',     4,      True,       'SIN(',         'SIN',      lambda x: m.sin(x)),
              'c': Operator('c',     4,      True,       'COS(',         'COS',      lambda x: m.cos(x)),
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
@@ -260,6 +250,8 @@ class GUI():
         
         self.expression = ''
         self.output_string = ''
+        self.is_result = False
+        
         self.buttons = []
         
         # create frame
@@ -423,10 +415,10 @@ class GUI():
     # button commands
     def number_command(self, symbol):
         
-        # if expression is a number, it's a result, 
-        # and we shouldn't add another digit to it.
+        # if it's a result, don't add another digit to it
         # instead, clear and replace the result
-        if type(self.expression) == int or type(self.expression) == float:
+        if self.is_result:
+            self.is_result = False
             self.clear_command()
         
         # update expression and output strings
@@ -441,11 +433,10 @@ class GUI():
             
     def operator_command(self, symbol):
         
-        # convert expresion and output to string if digit 
-        # (just means it's a result, which is allowed for operators)
-        self.expression = str(self.expression)
-        self.output_string = str(self.output_string)
-        
+        # if it's a result, that's fine, we can add an operator
+        if self.is_result:
+            self.is_result = False
+                
         # handle close parentheses
         if symbol == ')':
             # don't allow placement after operators (unless its ')')
@@ -492,22 +483,36 @@ class GUI():
         
     def enter_command(self):
         
-        if self.terminal.get(): # enter only if non-empty
-            # evaluate 
-            postfix = Evaluate.convert_to_postfix(self.expression)
-            result = Evaluate.evaluate(postfix)
-            
-            # update expression and output strings
-            self.expression = result
-            self.output_string = result
-            
-            # update terminal
-            self.terminal.config(state='normal')
-            self.terminal.delete(0, "end")
-            self.terminal.insert(0, self.output_string)
-            self.terminal.config(state='disabled')
+        if not self.terminal.get(): # enter only if non-empty
+            return 
+        
+        # this is a result (cannot be followed by backspace or operand)
+        self.is_result = True
+        
+        # evaluate 
+        postfix = Evaluate.convert_to_postfix(self.expression)
+        result = Evaluate.evaluate(postfix)
+        
+        # update expression and output strings
+        # if negative, convert - to ~
+        if result < 0:
+            self.expression = "~" + str(result)[1:]
+        else:
+            self.expression = str(result)
+        self.output_string = Evaluate.to_string(self.expression)
+        
+        # update terminal
+        self.terminal.config(state='normal')
+        self.terminal.delete(0, "end")
+        self.terminal.insert(0, self.output_string)
+        self.terminal.config(state='disabled')
+        
 
     def clear_command(self):
+        
+        # if it was a result, it's not anymore
+        if self.is_result:
+            self.is_result = False
         
         # update expression and output strings
         self.expression = ''
@@ -524,9 +529,8 @@ class GUI():
         if not self.expression:
             return
         
-        # if expression is an integer or float, 
-        # it's a result, and it should just clear everything
-        if type(self.expression) == int or type(self.expression) == float:
+        # if expression is a result, just clear everything
+        if self.is_result:
             self.clear_command()
             return
         
