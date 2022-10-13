@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 13 2:21:10 2022
+Updated on Tues Oct 13 2:38:03 2022
 
 @author: Jessica Bidon
 """
 
-""" 
+"""
     Possible Features: 
         - icons instead of text for button labels
-        - New operators: 
-            - multiplicative inverse
-            - percent
         - Better design
             - colors!
             - rounded buttons
@@ -80,7 +77,7 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              '(': Operator('(',     4,      True,       '(',            '(',        lambda x: x), # use for infix only
              ')': Operator(')',     4,      True,       ')',            ')',        lambda x: x), # use for infix only
              '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x), # use for infix only
-             'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x) # not yet implemented
+             'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x)  # use for infix only
             }
 
 class Evaluate:
@@ -279,7 +276,7 @@ class GUI():
         self.root.geometry("400x500")
         
         # configure grid for dynamic resizing
-        for i in range(7):
+        for i in range(8):
             tk.Grid.rowconfigure(self.root, i, weight=1)
         for i in range(5):
             tk.Grid.columnconfigure(self.root, i, weight=1)
@@ -414,9 +411,8 @@ class GUI():
         self.buttons.append(square_root_button)
         
         # multiplicative inverse
-        mult_inverse_button = tk.Button(self.root, text=operators['i'].button_str, command=None)
+        mult_inverse_button = tk.Button(self.root, text=operators['i'].button_str, command=lambda: self.operator_command('i'))
         mult_inverse_button.grid(row=2, column=1, sticky='nesw')
-        mult_inverse_button["state"] = tk.DISABLED
         self.buttons.append(mult_inverse_button)
         
     def create_utility_buttons(self):
@@ -520,6 +516,13 @@ class GUI():
                         operator_exists = True
                 if not operator_exists:
                     return          
+                
+        # multiplicative inverse must follow an operand
+        # replace symbol 'i' with '^~1'
+        elif symbol == 'i':
+            if not self.expression[-1].isdigit():
+                return
+            symbol = '^~1'
         
         # all other operators cannot follow another operator (unless it's ')')
         elif symbol in operators and operators[symbol].priority < 4:
