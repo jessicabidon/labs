@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 13 2:38:03 2022
+Updated on Tues Oct 13 3:19:21 2022
 
 @author: Jessica Bidon
 """
@@ -17,9 +17,11 @@ Updated on Tues Oct 13 2:38:03 2022
             - close_paren_command
             - negation_command
             - decimal_command
+            - mult_inverse_command
         - documentation
 """
 
+from re import S
 import tkinter as tk
 import math as m
 
@@ -64,16 +66,16 @@ class Stack:
 # operator attributes:   symbol, priority, is_unary, output_string, button_string, and func (function to execute)
 operators = {'+': Operator('+',     1,      False,      '+',            '+',        lambda x, y: x + y),
              '-': Operator('-',     1,      False,      '-',            '-',        lambda x, y: x - y),
-             '*': Operator('*',     2,      False,      '*',            'x',        lambda x, y: x * y), # TODO: change to unicode multiply
-             '/': Operator('/',     2,      False,      '/',            '/',        lambda x, y: x / y), # TODO: change to unicode divide
+             '*': Operator('*',     2,      False,      '\u00D7',       '\u00D7',   lambda x, y: x * y),
+             '/': Operator('/',     2,      False,      '\u00F7',       '\u00F7',   lambda x, y: x / y),
              '^': Operator('^',     3,      False,      '^',            '^',        lambda x, y: x ** y), 
-             '~': Operator('~',     4,      True,       '-',            '(-)',      lambda x: x * -1),
+             '~': Operator('~',     4,      True,       '-',            '\u00B1',   lambda x: x * -1),
              's': Operator('s',     4,      True,       'SIN(',         'SIN',      lambda x: m.sin(x)),
              'c': Operator('c',     4,      True,       'COS(',         'COS',      lambda x: m.cos(x)),
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
              'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
              'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)),
-             'q': Operator('q',     4,      True,       'sqrt(',        'sqrt',     lambda x: m.sqrt(x)), 
+             'q': Operator('q',     4,      True,       '\u221A(',      '\u221A',   lambda x: m.sqrt(x)), 
              '(': Operator('(',     4,      True,       '(',            '(',        lambda x: x), # use for infix only
              ')': Operator(')',     4,      True,       ')',            ')',        lambda x: x), # use for infix only
              '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x), # use for infix only
@@ -418,19 +420,37 @@ class GUI():
     def create_utility_buttons(self):
         
         # enter button
-        enter_button = tk.Button(self.root, text='-->', command=lambda: self.enter_command())
+        enter_button = tk.Button(self.root, text='Enter', command=lambda: self.enter_command())
         enter_button.grid(row=6, column=4, rowspan=2, sticky='nesw')
         self.buttons.append(enter_button)
                 
         # clear button
-        clear_button = tk.Button(self.root, text='clr', command=lambda: self.clear_command())
+        clear_button = tk.Button(self.root, text='Clear', command=lambda: self.clear_command())
         clear_button.grid(row=5, column=4, sticky='nesw')
         self.buttons.append(clear_button)
                 
         # back button
-        back_button = tk.Button(self.root, text='<--', command=lambda: self.back_command())
+        back_button = tk.Button(self.root, text='Back', command=lambda: self.back_command())
         back_button.grid(row=4, column=4, sticky='nesw')
         self.buttons.append(back_button)
+    
+    def update_terminal(self):
+        
+        self.terminal.config(state='normal')
+        self.terminal.delete(0, 'end')
+        self.terminal.insert(0, self.output_string)
+        self.terminal.config(state='disabled') # re-disable input for typing
+    
+    def add_to_terminal(self, symbol):
+        
+        # update expression and output strings
+        self.expression += symbol
+        symbol_as_output = Evaluate.to_string(symbol)
+        self.output_string += symbol_as_output
+        
+        self.terminal.config(state='normal') 
+        self.terminal.insert('end', symbol_as_output)
+        self.terminal.config(state='disabled')
     
     # button commands
     def number_command(self, symbol):
@@ -461,7 +481,7 @@ class GUI():
         # if expression is empty and output is not,
         # there was an error, clear output
         if not self.expression and self.output_string:
-            self.clear_command
+            self.clear_command()
         
         # if it's a result, that's fine, we can add an operator
         if self.is_result:
@@ -489,18 +509,17 @@ class GUI():
             # if there are no open parentheses, don't allow placement of )
             if open_paren_count <= 0:
                 return
-        
-        # if priority 4 operators (parentheses and trig/log) 
-        # follow an operand or '.', add a multiply first
-        # (exclude close parentheses)
-        elif symbol in operators and operators[symbol].priority == 4:
-            if self.expression and (self.expression[-1].isdigit() or self.expression[-1] == '.'):
-                symbol = '*' + symbol
-        
-        # negation operator cannot follow an operand
+ 
+        # if negation operator follows an operand, put in front
+        # if it follows another negator, delete both
         elif symbol == '~':
             if self.expression[-1].isdigit():
                 return
+            if self.expression[-1] == '~':
+                self.expression = self.expression[:-1]
+                self.output_string = self.output_string[:-1]
+                symbol = ''
+                self.update_terminal()
         
         # decimal must follow an operand, 
         # and if multiple, must be separated by operators
@@ -524,20 +543,20 @@ class GUI():
                 return
             symbol = '^~1'
         
+        # if priority 4 operators (parentheses and trig/log) 
+        # follow an operand or '.', add a multiply first
+        # (exclude close parentheses)
+        elif symbol in operators and operators[symbol].priority == 4:
+            if self.expression and (self.expression[-1].isdigit() or self.expression[-1] == '.'):
+                symbol = '*' + symbol
+        
         # all other operators cannot follow another operator (unless it's ')')
         elif symbol in operators and operators[symbol].priority < 4:
             if self.expression and not (self.expression[-1].isdigit() or self.expression[-1] == ')'):
                 return
                 
-        # update expression and output strings
-        self.expression += symbol
-        symbol_as_output = Evaluate.to_string(symbol)
-        self.output_string += symbol_as_output
-        
-        self.terminal.config(state='normal') 
-        self.terminal.insert('end', symbol_as_output)
-        self.terminal.config(state='disabled') # re-disable input for typing
-        
+        self.add_to_terminal(symbol)
+    
     def enter_command(self):
         
         if not self.terminal.get(): # enter only if non-empty
@@ -575,10 +594,7 @@ class GUI():
             self.expression = ''
         
         # update terminal
-        self.terminal.config(state='normal')
-        self.terminal.delete(0, "end")
-        self.terminal.insert(0, self.output_string)
-        self.terminal.config(state='disabled')
+        self.update_terminal()
         
     def clear_command(self):
         
@@ -591,9 +607,7 @@ class GUI():
         self.output_string = ''
         
         # update terminal
-        self.terminal.config(state='normal')
-        self.terminal.delete(0, "end")
-        self.terminal.config(state='disabled')
+        self.update_terminal()
         
     def back_command(self):
         
@@ -627,10 +641,7 @@ class GUI():
         self.output_string = self.output_string[:output_indices]
         
         # update terminal with new output string
-        self.terminal.config(state='normal')
-        self.terminal.delete(0, "end")
-        self.terminal.insert(0, self.output_string)
-        self.terminal.config(state='disabled')
+        self.update_terminal()
         
     def resize_text(self, window):
         
