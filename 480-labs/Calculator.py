@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 13 2:17:56 2022
+Updated on Tues Oct 13 2:21:10 2022
 
 @author: Jessica Bidon
 """
 
-"""        
+""" 
     Possible Features: 
         - icons instead of text for button labels
         - New operators: 
-            - square root
             - multiplicative inverse
             - percent
         - Better design
@@ -76,12 +75,12 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              'c': Operator('c',     4,      True,       'COS(',         'COS',      lambda x: m.cos(x)),
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
              'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
-             'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)), 
+             'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)),
+             'q': Operator('q',     4,      True,       'sqrt(',        'sqrt',     lambda x: m.sqrt(x)), 
              '(': Operator('(',     4,      True,       '(',            '(',        lambda x: x), # use for infix only
              ')': Operator(')',     4,      True,       ')',            ')',        lambda x: x), # use for infix only
              '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x), # use for infix only
-             'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x), # not yet implemented
-             'q': Operator('q',     5,      True,       'sqrt(',        'sqrt',     lambda x: x)  # not yet implemented
+             'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x) # not yet implemented
             }
 
 class Evaluate:
@@ -410,9 +409,8 @@ class GUI():
         self.buttons.append(close_paren_button)
         
         # square root 'q'
-        square_root_button = tk.Button(self.root, text=operators['q'].button_str, command=None)
+        square_root_button = tk.Button(self.root, text=operators['q'].button_str, command=lambda: self.operator_command('q'))
         square_root_button.grid(row=2, column=0, sticky='nesw')
-        square_root_button["state"] = tk.DISABLED
         self.buttons.append(square_root_button)
         
         # multiplicative inverse
