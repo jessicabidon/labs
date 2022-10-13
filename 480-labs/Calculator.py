@@ -74,6 +74,7 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              's': Operator('s',     4,      True,       'SIN(',         'SIN',      lambda x: m.sin(x)),
              'c': Operator('c',     4,      True,       'COS(',         'COS',      lambda x: m.cos(x)),
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
+             'g': Operator('g',     4,      True,       'COT(',         'COT',      lambda x: m.cotangent(x)),
              'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
              'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)),
              'q': Operator('q',     4,      True,       '\u221A(',      '\u221A',   lambda x: m.sqrt(x)), 
@@ -223,7 +224,7 @@ class Evaluate:
                 sole_operand = operand_stack.pop()
                 
                 # don't allow log or square root of negative
-                if sole_operand < 0 and symbol in ('l', 'q'):
+                if sole_operand < 0 and symbol in ('l', 'n', 'q'):
                     return f"Domain Error: {operators[symbol].button_str}"
                 
                 # apply funciton assigned to that operator
