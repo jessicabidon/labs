@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 13 12:51:10 2022
+Updated on Tues Oct 13 2:17:56 2022
 
 @author: Jessica Bidon
 """
 
-"""
-    Known Bugs: 
-        - entry box doesn't side scroll as the input exceeds size of frame
-        - if result is too big, it might extend beyond frame
-        
+"""        
     Possible Features: 
         - icons instead of text for button labels
         - New operators: 
@@ -25,6 +21,7 @@ Updated on Tues Oct 13 12:51:10 2022
             - close_paren_command
             - negation_command
             - decimal_command
+        - documentation
 """
 
 import tkinter as tk
@@ -225,8 +222,11 @@ class Evaluate:
                 if symbol == '/' and second_operand == 0:
                     return "Error: Div by 0"
                 
-                # apply function assigned to that operator
-                result = operators[symbol].func(first_operand, second_operand)
+                try:
+                    # apply function assigned to that operator
+                    result = operators[symbol].func(first_operand, second_operand)
+                except OverflowError:
+                    return "Error: Overflow"
                 
                 # push result back to operand stack
                 operand_stack.push(result)
@@ -289,6 +289,12 @@ class GUI():
         self.terminal = tk.Entry(self.root, borderwidth=5, font=self.font + self.terminal_fontsize, state='disabled')
         self.terminal.grid(row=0, column=0, columnspan=5, sticky='nesw')
         
+        # create scrollbar
+        scroll = tk.Scrollbar(self.root, orient='horizontal')
+        scroll.grid(row=1, columnspan=5, sticky='nesw')
+        scroll.config(command=self.terminal.xview)
+        self.terminal.config(xscrollcommand=scroll.set)
+        
         # create the gui
         self.create_gui()
 
@@ -320,98 +326,98 @@ class GUI():
             self.buttons.append(tk.Button(self.root, text=str(i), command=lambda i=i: self.number_command(str(i))))
             
         # add number buttons to grid
-        self.buttons[7].grid(row=3, column=1, sticky='nesw')
-        self.buttons[8].grid(row=3, column=2, sticky='nesw')
-        self.buttons[9].grid(row=3, column=3, sticky='nesw')
-        self.buttons[4].grid(row=4, column=1, sticky='nesw')
-        self.buttons[5].grid(row=4, column=2, sticky='nesw')
-        self.buttons[6].grid(row=4, column=3, sticky='nesw')
-        self.buttons[1].grid(row=5, column=1, sticky='nesw')
-        self.buttons[2].grid(row=5, column=2, sticky='nesw')
-        self.buttons[3].grid(row=5, column=3, sticky='nesw')
-        self.buttons[0].grid(row=6, column=1, sticky='nesw')
+        self.buttons[7].grid(row=4, column=1, sticky='nesw')
+        self.buttons[8].grid(row=4, column=2, sticky='nesw')
+        self.buttons[9].grid(row=4, column=3, sticky='nesw')
+        self.buttons[4].grid(row=5, column=1, sticky='nesw')
+        self.buttons[5].grid(row=5, column=2, sticky='nesw')
+        self.buttons[6].grid(row=5, column=3, sticky='nesw')
+        self.buttons[1].grid(row=6, column=1, sticky='nesw')
+        self.buttons[2].grid(row=6, column=2, sticky='nesw')
+        self.buttons[3].grid(row=6, column=3, sticky='nesw')
+        self.buttons[0].grid(row=7, column=1, sticky='nesw')
         
     def create_operator_buttons(self):
         
         # decimal "."
         decimal_button = tk.Button(self.root, text=operators["."].button_str, command=lambda: self.operator_command("."))
-        decimal_button.grid(row=6, column=2, sticky='nesw')
+        decimal_button.grid(row=7, column=2, sticky='nesw')
         self.buttons.append(decimal_button)
         
         # negation "~"
         negation_button = tk.Button(self.root, text=operators['~'].button_str, command=lambda: self.operator_command('~'))
-        negation_button.grid(row=6, column=3, sticky='nesw')
+        negation_button.grid(row=7, column=3, sticky='nesw')
         self.buttons.append(negation_button)
         
         # divide "/"
         divide_button = tk.Button(self.root, text=operators['/'].button_str, command=lambda: self.operator_command('/'))
-        divide_button.grid(row=2, column=1, sticky='nesw')
+        divide_button.grid(row=3, column=1, sticky='nesw')
         self.buttons.append(divide_button)
         
         # multiply "*"
         multiply_button = tk.Button(self.root, text=operators['*'].button_str, command=lambda: self.operator_command('*'))
-        multiply_button.grid(row=2, column=2, sticky='nesw')
+        multiply_button.grid(row=3, column=2, sticky='nesw')
         self.buttons.append(multiply_button)
         
         # addition "+"
         addition_button = tk.Button(self.root, text=operators['+'].button_str, command=lambda: self.operator_command('+'))
-        addition_button.grid(row=2, column=3, sticky='nesw')
+        addition_button.grid(row=3, column=3, sticky='nesw')
         self.buttons.append(addition_button)
         
         # subtraction "-"
         subtraction_button = tk.Button(self.root, text=operators['-'].button_str, command=lambda: self.operator_command('-'))
-        subtraction_button.grid(row=2, column=4, sticky='nesw')
+        subtraction_button.grid(row=3, column=4, sticky='nesw')
         self.buttons.append(subtraction_button)
         
         # natural log "n"
         natural_log_button = tk.Button(self.root, text=operators['n'].button_str, command=lambda: self.operator_command('n'))
-        natural_log_button.grid(row=6, column=0, sticky='nesw')
+        natural_log_button.grid(row=7, column=0, sticky='nesw')
         self.buttons.append(natural_log_button)
         
         # base-10 log "l"
         log10_button = tk.Button(self.root, text=operators['l'].button_str, command=lambda: self.operator_command('l'))
-        log10_button.grid(row=5, column=0, sticky='nesw')
+        log10_button.grid(row=6, column=0, sticky='nesw')
         self.buttons.append(log10_button)
         
         # sin "s"
         sin_button = tk.Button(self.root, text=operators['s'].button_str, command=lambda: self.operator_command('s'))
-        sin_button.grid(row=4, column=0, sticky='nesw')
+        sin_button.grid(row=5, column=0, sticky='nesw')
         self.buttons.append(sin_button)
         
         # cos "c"
         cos_button = tk.Button(self.root, text=operators['c'].button_str, command=lambda: self.operator_command('c'))
-        cos_button.grid(row=3, column=0, sticky='nesw')
+        cos_button.grid(row=4, column=0, sticky='nesw')
         self.buttons.append(cos_button)
         
         # tan "t"
         tan_button = tk.Button(self.root, text=operators['t'].button_str, command=lambda: self.operator_command('t'))
-        tan_button.grid(row=2, column=0, sticky='nesw')
+        tan_button.grid(row=3, column=0, sticky='nesw')
         self.buttons.append(tan_button)
         
         # exponent "^"
         exponent_button = tk.Button(self.root, text=operators['^'].button_str, command=lambda: self.operator_command('^'))
-        exponent_button.grid(row=1, column=2, sticky='nesw')
+        exponent_button.grid(row=2, column=2, sticky='nesw')
         self.buttons.append(exponent_button)
         
         # open parentheses "("
         open_paren_button = tk.Button(self.root, text=operators['('].button_str, command=lambda: self.operator_command('('))
-        open_paren_button.grid(row=1, column=3, sticky='nesw')
+        open_paren_button.grid(row=2, column=3, sticky='nesw')
         self.buttons.append(open_paren_button)
         
         # close parentheses ")"
         close_paren_button = tk.Button(self.root, text=operators[')'].button_str, command=lambda: self.operator_command(')'))
-        close_paren_button.grid(row=1, column=4, sticky='nesw')
+        close_paren_button.grid(row=2, column=4, sticky='nesw')
         self.buttons.append(close_paren_button)
         
         # square root 'q'
         square_root_button = tk.Button(self.root, text=operators['q'].button_str, command=None)
-        square_root_button.grid(row=1, column=0, sticky='nesw')
+        square_root_button.grid(row=2, column=0, sticky='nesw')
         square_root_button["state"] = tk.DISABLED
         self.buttons.append(square_root_button)
         
         # multiplicative inverse
         mult_inverse_button = tk.Button(self.root, text=operators['i'].button_str, command=None)
-        mult_inverse_button.grid(row=1, column=1, sticky='nesw')
+        mult_inverse_button.grid(row=2, column=1, sticky='nesw')
         mult_inverse_button["state"] = tk.DISABLED
         self.buttons.append(mult_inverse_button)
         
@@ -419,22 +425,27 @@ class GUI():
         
         # enter button
         enter_button = tk.Button(self.root, text='-->', command=lambda: self.enter_command())
-        enter_button.grid(row=5, column=4, rowspan=2, sticky='nesw')
+        enter_button.grid(row=6, column=4, rowspan=2, sticky='nesw')
         self.buttons.append(enter_button)
                 
         # clear button
         clear_button = tk.Button(self.root, text='clr', command=lambda: self.clear_command())
-        clear_button.grid(row=4, column=4, sticky='nesw')
+        clear_button.grid(row=5, column=4, sticky='nesw')
         self.buttons.append(clear_button)
                 
         # back button
         back_button = tk.Button(self.root, text='<--', command=lambda: self.back_command())
-        back_button.grid(row=3, column=4, sticky='nesw')
+        back_button.grid(row=4, column=4, sticky='nesw')
         self.buttons.append(back_button)
     
     # button commands
     def number_command(self, symbol):
         
+        # if expression is empty and output is not,
+        # there was an error, clear output and update terminal
+        if not self.expression and self.output_string:
+            self.clear_command()
+            
         # if it's a result, don't add another digit to it
         # instead, clear and replace the result
         if self.is_result:
@@ -452,6 +463,11 @@ class GUI():
         self.terminal.config(state='disabled')
             
     def operator_command(self, symbol):
+                
+        # if expression is empty and output is not,
+        # there was an error, clear output
+        if not self.expression and self.output_string:
+            self.clear_command
         
         # if it's a result, that's fine, we can add an operator
         if self.is_result:
