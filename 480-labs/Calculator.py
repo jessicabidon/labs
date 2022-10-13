@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 12 10:07:23 2022
+Updated on Tues Oct 13 12:51:10 2022
 
 @author: Jessica Bidon
 """
 
 """
     Known Bugs: 
+        - able to enter an operator when terminal is empty
         - entry box doesn't side scroll as the input exceeds size of frame
+        - if result is too big, it might extend beyond frame
+        - no error handling when trig/log functions have no operand
+        - print statements instead of real exception handling
         
     Possible Features: 
         - icons instead of text for button labels
@@ -18,6 +22,12 @@ Updated on Tues Oct 12 10:07:23 2022
         - Better design
             - colors!
             - rounded buttons
+            
+    Software Design Improvements:
+        - separate operator_command into multiple methods to handle outliers
+            - close_paren_command
+            - negation_command
+            - decimal_command
 """
 
 import tkinter as tk
@@ -73,8 +83,8 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
              'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
              'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)), 
-             '(': Operator('(',     4,      False,      '(',            '(',        lambda x: x), # use for infix only
-             ')': Operator(')',     4,      False,      ')',            ')',        lambda x: x), # use for infix only
+             '(': Operator('(',     4,      True,      '(',            '(',        lambda x: x), # use for infix only
+             ')': Operator(')',     4,      True,      ')',            ')',        lambda x: x), # use for infix only
              '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x), # use for infix only
              'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x), # not yet implemented
              'q': Operator('q',     5,      True,       'sqrt(',        'sqrt',     lambda x: x)  # not yet implemented
@@ -437,10 +447,15 @@ class GUI():
         if self.is_result:
             self.is_result = False
                 
+        # if terminal is clear, don't allow binary operators, ')', or '.'
+        if not self.expression:
+            if symbol in (')', '.') or not operators[symbol].is_unary:
+                return
+        
         # handle close parentheses
-        if symbol == ')':
+        elif symbol == ')':
             # don't allow placement after operators (unless its ')')
-            if self.expression and self.expression[-1] != ')' and self.expression[-1] in operators:
+            if self.expression[-1] != ')' and self.expression[-1] in operators:
                 return
             
             # count open parentheses/trig/log functions
@@ -464,8 +479,23 @@ class GUI():
         
         # negation operator cannot follow an operand
         elif symbol == '~':
-            if self.expression and self.expression[-1].isdigit():
+            if self.expression[-1].isdigit():
                 return
+        
+        # decimal must follow an operand, 
+        # and if multiple, must be separated by operators
+        elif symbol == '.':
+            if not self.expression[-1].isdigit():
+                return
+            # check if last occurrence of decimal has been followed by operator
+            last_decimal_index = self.expression.rfind('.')
+            if last_decimal_index > 0:            
+                operator_exists = False
+                for char in self.expression[last_decimal_index+1:]:
+                    if char in operators:
+                        operator_exists = True
+                if not operator_exists:
+                    return          
         
         # all other operators cannot follow another operator (unless it's ')')
         elif symbol in operators and operators[symbol].priority < 4:
@@ -485,6 +515,16 @@ class GUI():
         
         if not self.terminal.get(): # enter only if non-empty
             return 
+        
+        # make sure it ends with an operand (any ')' excluded)
+        for char in reversed(self.expression):
+            if char == ')':
+                continue
+            if char.isdigit() or char == '.':
+                break
+            else:
+                print("need another operand!")
+                return
         
         # this is a result (cannot be followed by backspace or operand)
         self.is_result = True
@@ -507,7 +547,6 @@ class GUI():
         self.terminal.insert(0, self.output_string)
         self.terminal.config(state='disabled')
         
-
     def clear_command(self):
         
         # if it was a result, it's not anymore
