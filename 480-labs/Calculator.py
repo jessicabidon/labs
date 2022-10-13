@@ -7,11 +7,8 @@ Updated on Tues Oct 13 12:51:10 2022
 
 """
     Known Bugs: 
-        - able to enter an operator when terminal is empty
         - entry box doesn't side scroll as the input exceeds size of frame
         - if result is too big, it might extend beyond frame
-        - no error handling when trig/log functions have no operand
-        - print statements instead of real exception handling
         
     Possible Features: 
         - icons instead of text for button labels
@@ -83,8 +80,8 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
              't': Operator('t',     4,      True,       'TAN(',         'TAN',      lambda x: m.tan(x)),
              'l': Operator('l',     4,      True,       'LOG(',         'LOG',      lambda x: m.log10(x)),
              'n': Operator('n',     4,      True,       'LN(',          'LN',       lambda x: m.log(x)), 
-             '(': Operator('(',     4,      True,      '(',            '(',        lambda x: x), # use for infix only
-             ')': Operator(')',     4,      True,      ')',            ')',        lambda x: x), # use for infix only
+             '(': Operator('(',     4,      True,       '(',            '(',        lambda x: x), # use for infix only
+             ')': Operator(')',     4,      True,       ')',            ')',        lambda x: x), # use for infix only
              '.': Operator('.',     5,      True,       '.',            '.',        lambda x: x), # use for infix only
              'i': Operator('i',     5,      True,       '^-1',          '1/x',      lambda x: x), # not yet implemented
              'q': Operator('q',     5,      True,       'sqrt(',        'sqrt',     lambda x: x)  # not yet implemented
@@ -113,11 +110,10 @@ class Evaluate:
             if symbol.isdigit():
                 current_number += symbol
             
-            # append decimal to number, unless there is already a decimal somehow 
+            # append decimal to number
             elif symbol == '.':
                 if decimal: 
-                    # TODO: throw error
-                    print("there are two decimals in this number!")
+                    raise Exception("Error: two decimals in this number!")
                     continue
                 current_number += '.'
                 decimal = True
@@ -125,7 +121,7 @@ class Evaluate:
             # check if its a valid operator
             elif symbol not in operators:
                 # TODO: throw error
-                print("invalid operator: infix conversion")
+                raise Exception("invalid operator: infix conversion")
                   
             # it's definitely an operator          
             else: 
@@ -195,7 +191,7 @@ class Evaluate:
             # check if its a valid operator
             elif symbol not in operators:
                 # TODO: throw error
-                print("invalid operator: postfix evaluation")
+                raise Exception("invalid operator: postfix evaluation")
                             
             # handle parentheses (this shouldn't happen)
             elif symbol == '(' or symbol == ')':
@@ -204,27 +200,41 @@ class Evaluate:
                             
             # handle unary operators
             elif operators[symbol].is_unary:
+                
                 # pop the sole operand
                 sole_operand = operand_stack.pop()
+                
+                # don't allow log or square root of negative
+                if sole_operand < 0 and symbol in ('l', 'q'):
+                    return f"Domain Error: {operators[symbol].button_str}"
+                
                 # apply funciton assigned to that operator
                 result = operators[symbol].func(sole_operand)
+                
                 # push result back to operand stack
                 operand_stack.push(result)
             
             # handle binary operators
             else:
+                
                 # pop two operands
                 second_operand = operand_stack.pop()
                 first_operand = operand_stack.pop()
+                
+                # don't allow divide by zero
+                if symbol == '/' and second_operand == 0:
+                    return "Error: Div by 0"
+                
                 # apply function assigned to that operator
                 result = operators[symbol].func(first_operand, second_operand)
+                
                 # push result back to operand stack
                 operand_stack.push(result)
                 
         # the result should be the one remaining element of this stack
         if operand_stack.top != 0:
             # TODO: throw error
-            print("postfix evaluation exception: operands remaining")
+            raise Exception("postfix evaluation exception: operands remaining")
             
         result = operand_stack.pop()
         
@@ -523,7 +533,7 @@ class GUI():
             if char.isdigit() or char == '.':
                 break
             else:
-                print("need another operand!")
+                # do nothing, need another operand
                 return
         
         # this is a result (cannot be followed by backspace or operand)
@@ -533,13 +543,19 @@ class GUI():
         postfix = Evaluate.convert_to_postfix(self.expression)
         result = Evaluate.evaluate(postfix)
         
-        # update expression and output strings
-        # if negative, convert - to ~
-        if result < 0:
-            self.expression = "~" + str(result)[1:]
-        else:
-            self.expression = str(result)
-        self.output_string = Evaluate.to_string(self.expression)
+        # if no error is passed, update expression and output strings
+        if type(result) != str:
+            
+            # if negative, convert - to ~
+            if result < 0:
+                self.expression = "~" + str(result)[1:]
+            else:
+                self.expression = str(result)
+            self.output_string = Evaluate.to_string(self.expression)
+        
+        else: # error has been passed
+            self.output_string = result
+            self.expression = ''
         
         # update terminal
         self.terminal.config(state='normal')
@@ -582,7 +598,7 @@ class GUI():
             output_length = 1
         elif op_to_remove not in operators:
             # TODO: throw error
-            print("how are you going to backspace an invalid operator?")
+            raise Exception("how are you going to backspace an invalid operator?")
         else:
             output_length = len(operators[op_to_remove].output_str)
         
@@ -614,20 +630,9 @@ class GUI():
         self.button_fontsize = str(size // 25)
         for button in self.buttons:
             button.config(font= self.font + self.button_fontsize)
-        
+
 def main():
-    
     GUI() 
-    
-    """string = "~5.78+~(4-2.23)+s0)*c1)/(1+t2*n~3+2*(1.23+99.111"
-    string1 = "1+s~3+8*l9/6)-(6+9/2))"
-    stack = Evaluate.convert_to_postfix(string)
-    print(stack.array)
-    print(Evaluate.to_string(string))
-    print(Evaluate.evaluate(stack))"""
-
-    
-
 
 if __name__ == '__main__':
     main()
