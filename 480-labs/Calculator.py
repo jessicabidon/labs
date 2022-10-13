@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on Tues Oct 13 3:45:91 2022
+Updated on Tues Oct 13 4:04:11 2022
 
 @author: Jessica Bidon
 """
@@ -18,13 +18,13 @@ Updated on Tues Oct 13 3:45:91 2022
             - negation_command
             - decimal_command
             - mult_inverse_command
-        - documentation
 """
 
 import tkinter as tk
 import math as m
 
 class Operator:
+    """A class which keeps track of information about different operators."""
     
     def __init__(self, symbol, priority, is_unary, output_string, button_string, func):
         self.symbol = symbol
@@ -35,6 +35,7 @@ class Operator:
         self.func = func
 
 class Stack:
+    """A class which adapts a list into a Stack structure."""
     
     # Constructor
     def __init__(self):
@@ -62,6 +63,7 @@ class Stack:
         self.top += 1
         self.array.append(element)
 
+"""A simple data structure containing all operators that will be used."""
 # operator attributes:   symbol, priority, is_unary, output_string, button_string, and func (function to execute)
 operators = {'+': Operator('+',     1,      False,      '+',            '+',        lambda x, y: x + y),
              '-': Operator('-',     1,      False,      '-',            '-',        lambda x, y: x - y),
@@ -82,11 +84,24 @@ operators = {'+': Operator('+',     1,      False,      '+',            '+',    
             }
 
 class Evaluate:
+    """A class which performs the backend functions of a calculator.
+       This includes translating it to postfix notation, 
+       evaluating the postfix notation, and providing a string
+       representation of the internal symbolic expression."""
     
-    # converts a string infix expression to a postfix stack
     @staticmethod
     def convert_to_postfix(infix_expression: str) -> Stack:
-        
+        """
+        Converts a string infix expression to a postfix stack.
+            
+            Parameters:
+                infix_expression (str): the mathematical expression in infix notation
+            
+            Returns: 
+                postfix_stack (Stack): the mathematical expression in postfix notation,
+                               contained in a stack structure
+        """
+  
         # keeps track of the operators before pushing to postfix
         operator_stack = Stack()
         
@@ -169,9 +184,18 @@ class Evaluate:
         
         return postfix_stack
     
-    # evaluates a postfix expression
     @staticmethod
     def evaluate(postfix_expression: Stack) -> float:
+        """
+        Evaluates a postfix expression.
+        
+            Parameters:
+                postfix_expression (Stack): the mathematical expression in postfix notation
+                                            contained in a Stack structure
+                                            
+            Returns:
+                result (float or int): the result of the mathematical expression
+        """
         
         # temporary stack to keep track of operands during evaluation
         operand_stack = Stack()
@@ -242,8 +266,18 @@ class Evaluate:
             return result
 
     # gets the string representation of an infix expression
-    @classmethod
-    def to_string(cls, infix_expression: str):
+    @staticmethod
+    def to_string(infix_expression: str):
+        """
+        Returns the string representation of a given infix expression.
+
+            Parameters:
+                infix_expression (str): the mathematical expression represented 
+                                        by symbols for internal use
+                
+            Returns: 
+                result (str): the string representation of that mathematical expression
+        """
         
         result = ''
         
@@ -258,18 +292,22 @@ class Evaluate:
         return result
 
 class GUI():
+    """A class which controls the view of the calculator."""
 
     def __init__(self):
             
+        # design elements
         self.colors = ["#22223B", "#B1C9A6", "#9A8C98", "#C9ADA7", "#F2E9E4"]
         self.font = 'Arial '
         self.terminal_fontsize = '20'
         self.button_fontsize = '16'
         
+        # internal state
         self.expression = ''
         self.output_string = ''
         self.is_result = False
         
+        # handy button storage
         self.buttons = []
         
         # create frame
@@ -303,6 +341,7 @@ class GUI():
         self.root.mainloop()
         
     def create_gui(self):
+        """A method which creates and configures all the buttons."""
         
         # create number buttons and add to grid
         self.create_number_buttons()
@@ -318,6 +357,7 @@ class GUI():
             button.config(font = self.font + self.button_fontsize)
         
     def create_number_buttons(self):
+        """A method which creates and places each number buttons."""
         
         # create number buttons
         for i in range(10):
@@ -336,6 +376,7 @@ class GUI():
         self.buttons[0].grid(row=7, column=1, sticky='nesw')
         
     def create_operator_buttons(self):
+        """A method which creates and places each operator button."""
         
         # decimal "."
         decimal_button = tk.Button(self.root, text=operators["."].button_str, bg=self.colors[4], command=lambda: self.operator_command("."))
@@ -418,6 +459,7 @@ class GUI():
         self.buttons.append(mult_inverse_button)
         
     def create_utility_buttons(self):
+        """A method which creates and places each utitily button (enter/clear/backspace)."""
         
         # enter button
         enter_button = tk.Button(self.root, text='Enter', bg=self.colors[1], command=lambda: self.enter_command())
@@ -435,6 +477,7 @@ class GUI():
         self.buttons.append(back_button)
     
     def update_terminal(self):
+        """A method which clears and re-renders the calculator terminal."""
         
         self.terminal.config(state='normal')
         self.terminal.delete(0, 'end')
@@ -442,6 +485,12 @@ class GUI():
         self.terminal.config(state='disabled') # re-disable input for typing
     
     def add_to_terminal(self, symbol):
+        """
+        A method which adds a symbol to the calculator terminal.
+        
+            Parameters:
+                symbol (str): A string containing a mathematical symbol (or set of symbols)                 
+        """
         
         # update expression and output strings
         self.expression += symbol
@@ -454,6 +503,12 @@ class GUI():
     
     # button commands
     def number_command(self, symbol):
+        """
+        A method that handles pressing a number button.
+        
+            Paramters:
+                symbol (str): the symbol representing the pressed button
+        """
         
         # if expression is empty and output is not,
         # there was an error, clear output and update terminal
@@ -477,7 +532,13 @@ class GUI():
         self.terminal.config(state='disabled')
             
     def operator_command(self, symbol):
-                
+        """
+        A method that handles pressing an operator button.
+        
+            Paramters:
+                symbol (str): the symbol representing the pressed button
+        """
+         
         # if expression is empty and output is not,
         # there was an error, clear output
         if not self.expression and self.output_string:
@@ -558,6 +619,7 @@ class GUI():
         self.add_to_terminal(symbol)
     
     def enter_command(self):
+        """A method that handles pressing the enter button."""
         
         if not self.terminal.get(): # enter only if non-empty
             return 
@@ -597,6 +659,7 @@ class GUI():
         self.update_terminal()
         
     def clear_command(self):
+        """A method that handles pressing the clear button."""
         
         # if it was a result, it's not anymore
         if self.is_result:
@@ -610,6 +673,7 @@ class GUI():
         self.update_terminal()
         
     def back_command(self):
+        """A method that handles pressing the back button."""
         
         # if expression is empty, do nothing
         if not self.expression:
@@ -644,6 +708,7 @@ class GUI():
         self.update_terminal()
         
     def resize_text(self, window):
+        """A method which resizes the button and terminal text according to window size."""
         
         # size constraint is the smaller of width and height        
         width = self.root.winfo_width()
@@ -660,6 +725,7 @@ class GUI():
             button.config(font= self.font + self.button_fontsize)
 
 def main():
+    """The main method."""
     GUI() 
 
 if __name__ == '__main__':
